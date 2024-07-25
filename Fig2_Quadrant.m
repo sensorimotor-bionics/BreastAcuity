@@ -99,7 +99,7 @@ axes('Position', [0.65 0.15 0.3 0.75]); hold on
     % Areola bar
     am = mean(ar_pc);
     as = std(ar_pc);
-    patch(x, y .* am, [.6 .6 .6], 'EdgeColor','none')
+    patch(x, y .* am, [.8 .8 .8], 'EdgeColor','none')
     plot(x, y .* am, 'Color', 'k')
     wc = 1;
     plot([wc-ww, wc+ww, wc, wc, wc-ww, wc+ww], [am-as, am-as, am-as, am+as, am+as, am+as], 'Color', 'k')
@@ -107,7 +107,7 @@ axes('Position', [0.65 0.15 0.3 0.75]); hold on
     % Nipple bar
     nm = mean(nip_pc);
     ns = std(nip_pc);
-    patch(x + 1.5, y .* nm, [.6 .6 .6], 'EdgeColor','none')
+    patch(x + 1.5, y .* nm, [.8 .8 .8], 'EdgeColor','none')
     plot(x + 1.5, y .* nm, 'Color', 'k')
     wc = 2.5;
     plot([wc-ww, wc+ww, wc, wc, wc-ww, wc+ww], [nm-ns, nm-ns, nm-ns, nm+ns, nm+ns, nm+ns], 'Color', 'k')
@@ -116,8 +116,8 @@ axes('Position', [0.65 0.15 0.3 0.75]); hold on
     x = repmat([1, 2.5, NaN], [nSubjects, 1])';
     y = [ar_pc, nip_pc, NaN(nSubjects, 1)]';
     plot(x(:), y(:), 'Color', [.4 .4 .4], 'LineWidth', 0.5)
-    scatter(ones(nSubjects,1), ar_pc, 30, [.4 .4 .4], 'filled')
-    scatter(ones(nSubjects,1) .* 2.5, nip_pc, 30, [.4 .4 .4], 'filled')
+    scatter(ones(nSubjects,1), ar_pc, 50, [.4 .4 .4], 'filled')
+    scatter(ones(nSubjects,1) .* 2.5, nip_pc, 50, [.4 .4 .4], 'filled')
 
 
     % Plot chance
