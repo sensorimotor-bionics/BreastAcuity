@@ -1,9 +1,10 @@
 %% Load QuadrantData from each participant
-data_path = fullfile(DataPath(), 'quadrant');
+data_path = fullfile(DataPath(), 'raw_data', 'quadrant');
 flist = dir(fullfile(data_path, '*.mat'));
 pooledData = struct();
 for f = 1:length(flist)
     temp = load(fullfile(data_path, flist(f).name));
+    pooledData(f).Subject = temp.data.subjID;
     pooledData(f).areola = temp.data.areola;
     pooledData(f).nipple = temp.data.nipple;
 end
@@ -14,8 +15,10 @@ nSubjects = length(pooledData);
 % Compute percent correct for each subject
 [ar_pc, nip_pc] = deal(zeros(nSubjects, 1));
 for i = 1:nSubjects
-    ar_pc(i) = sum(pooledData(i).areola.location == pooledData(i).areola.stylusresponse) / length(pooledData(i).areola.location);
-    nip_pc(i) = sum(pooledData(i).nipple.location == pooledData(i).nipple.stylusresponse) / length(pooledData(i).nipple.location);
+    ar_pc(i) = sum(pooledData(i).areola.location == pooledData(i).areola.stylusresponse) / ...
+        length(pooledData(i).areola.location);
+    nip_pc(i) = sum(pooledData(i).nipple.location == pooledData(i).nipple.stylusresponse) / ...
+        length(pooledData(i).nipple.location);
 end
 
 % Simulate odds assuming random guessing for each participant
@@ -44,7 +47,9 @@ for i = 1:nSubjects
 end
 % Bonferroni correction
 ar_pc_p = ar_pc_p .* nSubjects;
+ar_pc_h = ar_pc_p < 0.05;
 nip_pc_p = nip_pc_p .* nSubjects;
+nip_pc_h = nip_pc_p < 0.05;
 
 % Average across participants in meta_null to get cross-participant null
 meta_null_mean = squeeze(mean(meta_null, 1));
@@ -57,14 +62,47 @@ nip_meta_pc_z = (mean(nip_pc) - mean(meta_null_mean(:,2))) / meta_null_std(2);
 
 % Print number of participants who performed above chance
 fprintf('%d / %d subjects performed better than chance (areola). Z = %0.3f; p = %0.3f\n', ...
-    sum(ar_pc_p < 0.05), nSubjects, ar_meta_pc_z, ar_meta_pc_p)
+    sum(ar_pc_h), nSubjects, ar_meta_pc_z, ar_meta_pc_p)
 fprintf('%d / %d subjects performed better than chance (nipple). Z = %0.3f; p = %0.3f\n', ...
-    sum(nip_pc_p < 0.05), nSubjects, nip_meta_pc_z, nip_meta_pc_p)
+    sum(nip_pc_h), nSubjects, nip_meta_pc_z, nip_meta_pc_p)
+
+%% Load measurement from 2PD analysis
+load(fullfile(DataPath(), '2PD_processed'), 'subjectData')
+% Cross reference performance of each subject with measurements
+meas_table = NaN(length(subjectData), 4);
+sd_sl = {subjectData.Subject};
+for s = 1:length(subjectData)
+    %%%%%%%%% Missing subject ids?
+end
+clf; i = 1;
+for x = 1:width(meas_table)
+    for y = 1:width(jnd_table)
+        subplot(width(meas_table), width(jnd_table), i); hold on
+        nan_idx = isnan(meas_table{:,x}) | isnan(jnd_table{:,y});
+        p1 = polyfit(meas_table{~nan_idx,x}, jnd_table{~nan_idx,y}, 1);
+        [r,p] = corr(meas_table{~nan_idx,x}, jnd_table{~nan_idx,y});
+        lims = [min(meas_table{~nan_idx,x}), max(meas_table{~nan_idx,x})];
+        lims = [lims(1) - range(lims)*0.05, lims(2) + range(lims)*0.05];
+        plot(lims, polyval(p1, lims), 'Color', [.6 .6 .6], 'LineStyle', '--')
+        scatter(meas_table{~nan_idx,x}, jnd_table{~nan_idx,y}, 50, [.6 .6 .6], 'filled')
+        if y == 1
+            ylabel(strrep(meas_table.Properties.VariableNames{x}, '_', ' '), 'FontWeight', 'bold')
+        end
+        if x == 1
+            title(jnd_table.Properties.VariableNames{y})
+        end
+        [tx,ty] = GetAxisPosition(gca, 5,95);
+        text(tx,ty, sprintf('r = %0.3f\n%s', r, pStr(p*10)), 'VerticalAlignment', 'top')
+        i = i + 1;
+    end
+end
+
+shg
 
 %% Make figure
 clf;
-set(gcf, 'Units', 'Inches', 'Position', [30 1 5 2.5])
-axes('Position', [0.1 0.15 0.3 0.75]); hold on
+set(gcf, 'Units', 'Inches', 'Position', [30 1 6.45 2.25])
+axes('Position', [0.0 0.125 0.325 0.75]); hold on
     % Plot cross
     plot([-1 1], [-1 1], 'Color', [.6 .6 .6])
     plot([-1 1], [1 -1], 'Color', [.6 .6 .6])
@@ -81,8 +119,8 @@ axes('Position', [0.1 0.15 0.3 0.75]); hold on
     r = 0.7; % Half way between inner and outer ring
     scatter(sin(x) .* r, cos(x) .* r, 30, [0.26 0.28 0.63], 'filled')
     % Add text
-    text(1.25, 0, 'Medial', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle')
-    text(-1.25, 0, 'Lateral', 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle')
+    text(1.25, 0, 'Medial', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'Rotation', -90)
+    text(-1.25, 0, 'Lateral', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'Rotation', 90)
     text(0, 1.25, 'Superior', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom')
     text(0, -1.25, 'Inferior', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top')
 
@@ -91,7 +129,7 @@ axes('Position', [0.1 0.15 0.3 0.75]); hold on
              'XColor', 'none', ...
              'YColor', 'none')
 
-axes('Position', [0.65 0.15 0.3 0.75]); hold on
+axes('Position', [0.425 0.15 0.25 0.75]); hold on
     x = [0.5 0.5 1.5 1.5];
     y = [0 1 1 0];
     ww = 0.25;
@@ -116,9 +154,11 @@ axes('Position', [0.65 0.15 0.3 0.75]); hold on
     x = repmat([1, 2.5, NaN], [nSubjects, 1])';
     y = [ar_pc, nip_pc, NaN(nSubjects, 1)]';
     plot(x(:), y(:), 'Color', [.4 .4 .4], 'LineWidth', 0.5)
-    scatter(ones(nSubjects,1), ar_pc, 50, [.4 .4 .4], 'filled')
-    scatter(ones(nSubjects,1) .* 2.5, nip_pc, 50, [.4 .4 .4], 'filled')
-
+    % Individual points (filled = significant)
+    scatter(ones(sum(ar_pc_h),1), ar_pc(ar_pc_h), 50, [.4 .4 .4], 'MarkerFaceColor', [.4 .4 .4])
+    scatter(ones(sum(~ar_pc_h),1), ar_pc(~ar_pc_h), 50, [.4 .4 .4])
+    scatter(ones(sum(nip_pc_h),1) .* 2.5, nip_pc(nip_pc_h), 50, [.4 .4 .4], 'filled', 'MarkerFaceColor', [.4 .4 .4])
+    scatter(ones(sum(~nip_pc_h),1) .* 2.5, nip_pc(~nip_pc_h), 50, [.4 .4 .4])
 
     % Plot chance
     plot([0 3.5], [0.25 0.25], 'Color', [.4 .4 .4], 'LineStyle', '--')

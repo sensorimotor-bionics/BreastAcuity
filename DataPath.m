@@ -1,3 +1,3 @@
 function path = DataPath()
-    path = 'U:\UserFolders\CharlesGreenspon\BB_Acuity\data';
+    path = 'U:\UserFolders\CharlesGreenspon\BB_Acuity\';
 end
