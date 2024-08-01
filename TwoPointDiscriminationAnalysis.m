@@ -35,7 +35,7 @@ us = unique(sl);
 subjectData = struct();
 for s = 1:length(us)
     subjectData(s).Subject = us{s};
-    % Add responses to appropriat substructure
+    % Add responses to appropriate substructure
     for l = 1:length(lf)
         idx = strcmp(sl, us(s)) & strcmp(ll, lf{l});
         subjectData(s).(lf{l}).data = cat(1, data(idx).responses);

@@ -66,43 +66,34 @@ fprintf('%d / %d subjects performed better than chance (areola). Z = %0.3f; p = 
 fprintf('%d / %d subjects performed better than chance (nipple). Z = %0.3f; p = %0.3f\n', ...
     sum(nip_pc_h), nSubjects, nip_meta_pc_z, nip_meta_pc_p)
 
-%% Load measurement from 2PD analysis
-load(fullfile(DataPath(), '2PD_processed'), 'subjectData')
-% Cross reference performance of each subject with measurements
-meas_table = NaN(length(subjectData), 4);
-sd_sl = {subjectData.Subject};
-for s = 1:length(subjectData)
-    %%%%%%%%% Missing subject ids?
-end
-clf; i = 1;
-for x = 1:width(meas_table)
-    for y = 1:width(jnd_table)
-        subplot(width(meas_table), width(jnd_table), i); hold on
-        nan_idx = isnan(meas_table{:,x}) | isnan(jnd_table{:,y});
-        p1 = polyfit(meas_table{~nan_idx,x}, jnd_table{~nan_idx,y}, 1);
-        [r,p] = corr(meas_table{~nan_idx,x}, jnd_table{~nan_idx,y});
-        lims = [min(meas_table{~nan_idx,x}), max(meas_table{~nan_idx,x})];
-        lims = [lims(1) - range(lims)*0.05, lims(2) + range(lims)*0.05];
-        plot(lims, polyval(p1, lims), 'Color', [.6 .6 .6], 'LineStyle', '--')
-        scatter(meas_table{~nan_idx,x}, jnd_table{~nan_idx,y}, 50, [.6 .6 .6], 'filled')
-        if y == 1
-            ylabel(strrep(meas_table.Properties.VariableNames{x}, '_', ' '), 'FontWeight', 'bold')
-        end
-        if x == 1
-            title(jnd_table.Properties.VariableNames{y})
-        end
-        [tx,ty] = GetAxisPosition(gca, 5,95);
-        text(tx,ty, sprintf('r = %0.3f\n%s', r, pStr(p*10)), 'VerticalAlignment', 'top')
-        i = i + 1;
-    end
-end
+%% Make subject data structure & load measurements
+subjectMeta = readtable(fullfile(DataPath(), 'raw_data', 'SubjectMeta.xlsx'));
+sl = {pooledData.Subject};
 
-shg
+subjectData = struct();
+meas_table = NaN(length(sl), 3);
+for s = 1:length(sl)
+    subjectData(s).Subject = sl{s};
+    if contains(sl{s}, 'NotNumbered')
+        continue
+    end
+    % Add measurements field
+    meta_idx = strcmp(subjectMeta.Subject, strrep(sl{s}, '_', '-'));
+    if sum(meta_idx) ~= 1
+        [subjectData(s).measurements.bust, subjectData(s).measurements.underbust] = deal(nan);
+        continue
+    end
+    subjectData(s).measurements.bust = subjectMeta.bust(meta_idx);
+    subjectData(s).measurements.underbust = subjectMeta.underbust(meta_idx);
+    meas_table(s,1) = subjectMeta.bust(meta_idx);
+    meas_table(s,2) = subjectMeta.underbust(meta_idx);
+    meas_table(s,3) = meas_table(s,1) - meas_table(s,2);
+end
 
 %% Make figure
 clf;
 set(gcf, 'Units', 'Inches', 'Position', [30 1 6.45 2.25])
-axes('Position', [0.0 0.125 0.325 0.75]); hold on
+axes('Position', [0.0 0.125 0.3 0.75]); hold on
     % Plot cross
     plot([-1 1], [-1 1], 'Color', [.6 .6 .6])
     plot([-1 1], [1 -1], 'Color', [.6 .6 .6])
@@ -129,7 +120,7 @@ axes('Position', [0.0 0.125 0.325 0.75]); hold on
              'XColor', 'none', ...
              'YColor', 'none')
 
-axes('Position', [0.425 0.15 0.25 0.75]); hold on
+axes('Position', [0.375 0.2 0.25 0.7]); hold on
     x = [0.5 0.5 1.5 1.5];
     y = [0 1 1 0];
     ww = 0.25;
@@ -170,4 +161,30 @@ axes('Position', [0.425 0.15 0.25 0.75]); hold on
              'XTick', [1, 2.5], ...
              'XTickLabel', {'Areola', 'Nipple'})
     ylabel('p(correct)')
+
+axes('Position', [0.725 0.2 0.225 0.7]); hold on
+    xx = [30, 48];
+    c = lines(2);
+    for i = 1:2
+        nan_idx = isnan(meas_table(:,i));
+        x = meas_table(~nan_idx,i);
+        y = ar_pc(~nan_idx);
+        % Best fit line
+        p1 = polyfit(x, y, 1);
+        plot(xx, polyval(p1, xx), 'Color', c(i,:), 'LineStyle', '--')
+        % Scatter
+        scatter(x, y, 30, c(i,:), 'MarkerFaceColor', c(i,:))
+    end
+    xlabel('Size (inches)')
+    ylabel('Areola p(correct)')
+    set(gca, 'XLim', [28, 50], ...
+             'YLim', [0.25 1], ...
+             'XTick', [30:10:50], ...
+             'YTick', [.25:.25:1])
+    [x,y] = GetAxisPosition(gca, 95, 95);
+    text(x,y, ColorText({'Bust', 'Underbust'}, c), 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right')
+
+AddFigureLabels(gcf, [.05, -.05])
+
 shg
+print(gcf, fullfile(FigurePath, "Fig2_Quadrant.png"), '-dpng', '-r300')
