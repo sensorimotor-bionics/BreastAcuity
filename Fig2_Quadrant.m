@@ -11,6 +11,7 @@ end
 clearvars -except pooledData
 nSubjects = length(pooledData);
 
+
 %% For each participant what is the odds of getting x% correct
 % Compute percent correct for each subject
 [ar_pc, nip_pc] = deal(zeros(nSubjects, 1));
@@ -66,6 +67,7 @@ fprintf('%d / %d subjects performed better than chance (areola). Z = %0.3f; p = 
 fprintf('%d / %d subjects performed better than chance (nipple). Z = %0.3f; p = %0.3f\n', ...
     sum(nip_pc_h), nSubjects, nip_meta_pc_z, nip_meta_pc_p)
 
+
 %% Make subject data structure & load measurements
 subjectMeta = readtable(fullfile(DataPath(), 'raw_data', 'SubjectMeta.xlsx'));
 sl = {pooledData.Subject};
@@ -90,7 +92,11 @@ for s = 1:length(sl)
     meas_table(s,3) = meas_table(s,1) - meas_table(s,2);
 end
 
+
 %% Make figure
+nipple_color = [0.26 0.63 0.28];
+areola_color = [0.26 0.28 0.63];
+
 clf;
 set(gcf, 'Units', 'Inches', 'Position', [30 1 6.45 2.25])
 axes('Position', [0.0 0.125 0.3 0.75]); hold on
@@ -106,9 +112,9 @@ axes('Position', [0.0 0.125 0.3 0.75]); hold on
     % Scatter points
     x = linspace(0, 1.5*pi, 4);
     r = 0.2; % Half radius of inner ring
-    scatter(sin(x) .* r, cos(x) .* r, 30, [0.26 0.63 0.28], 'filled')
+    scatter(sin(x) .* r, cos(x) .* r, 30, nipple_color, 'filled')
     r = 0.7; % Half way between inner and outer ring
-    scatter(sin(x) .* r, cos(x) .* r, 30, [0.26 0.28 0.63], 'filled')
+    scatter(sin(x) .* r, cos(x) .* r, 30, areola_color, 'filled')
     % Add text
     text(1.25, 0, 'Medial', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'Rotation', -90)
     text(-1.25, 0, 'Lateral', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'Rotation', 90)
@@ -128,7 +134,7 @@ axes('Position', [0.375 0.2 0.25 0.7]); hold on
     % Areola bar
     am = mean(ar_pc);
     as = std(ar_pc);
-    patch(x, y .* am, [.8 .8 .8], 'EdgeColor','none')
+    patch(x, y .* am, areola_color, 'EdgeColor','none', 'FaceAlpha', 0.2)
     plot(x, y .* am, 'Color', 'k')
     wc = 1;
     plot([wc-ww, wc+ww, wc, wc, wc-ww, wc+ww], [am-as, am-as, am-as, am+as, am+as, am+as], 'Color', 'k')
@@ -136,7 +142,7 @@ axes('Position', [0.375 0.2 0.25 0.7]); hold on
     % Nipple bar
     nm = mean(nip_pc);
     ns = std(nip_pc);
-    patch(x + 1.5, y .* nm, [.8 .8 .8], 'EdgeColor','none')
+    patch(x + 1.5, y .* nm, nipple_color, 'EdgeColor','none', 'FaceAlpha', 0.2)
     plot(x + 1.5, y .* nm, 'Color', 'k')
     wc = 2.5;
     plot([wc-ww, wc+ww, wc, wc, wc-ww, wc+ww], [nm-ns, nm-ns, nm-ns, nm+ns, nm+ns, nm+ns], 'Color', 'k')
@@ -146,10 +152,10 @@ axes('Position', [0.375 0.2 0.25 0.7]); hold on
     y = [ar_pc, nip_pc, NaN(nSubjects, 1)]';
     plot(x(:), y(:), 'Color', [.4 .4 .4], 'LineWidth', 0.5)
     % Individual points (filled = significant)
-    scatter(ones(sum(ar_pc_h),1), ar_pc(ar_pc_h), 50, [.4 .4 .4], 'MarkerFaceColor', [.4 .4 .4])
-    scatter(ones(sum(~ar_pc_h),1), ar_pc(~ar_pc_h), 50, [.4 .4 .4])
-    scatter(ones(sum(nip_pc_h),1) .* 2.5, nip_pc(nip_pc_h), 50, [.4 .4 .4], 'filled', 'MarkerFaceColor', [.4 .4 .4])
-    scatter(ones(sum(~nip_pc_h),1) .* 2.5, nip_pc(~nip_pc_h), 50, [.4 .4 .4])
+    scatter(ones(sum(ar_pc_h),1), ar_pc(ar_pc_h), 50, areola_color, 'MarkerFaceColor', areola_color)
+    scatter(ones(sum(~ar_pc_h),1), ar_pc(~ar_pc_h), 50, areola_color)
+    scatter(ones(sum(nip_pc_h),1) .* 2.5, nip_pc(nip_pc_h), 50, nipple_color, 'MarkerFaceColor', nipple_color)
+    scatter(ones(sum(~nip_pc_h),1) .* 2.5, nip_pc(~nip_pc_h), 50, nipple_color)
 
     % Plot chance
     plot([0 3.5], [0.25 0.25], 'Color', [.4 .4 .4], 'LineStyle', '--')
@@ -163,26 +169,30 @@ axes('Position', [0.375 0.2 0.25 0.7]); hold on
     ylabel('p(correct)')
 
 axes('Position', [0.725 0.2 0.225 0.7]); hold on
-    xx = [30, 48];
-    c = lines(2);
-    for i = 1:2
-        nan_idx = isnan(meas_table(:,i));
-        x = meas_table(~nan_idx,i);
-        y = ar_pc(~nan_idx);
-        % Best fit line
-        p1 = polyfit(x, y, 1);
-        plot(xx, polyval(p1, xx), 'Color', c(i,:), 'LineStyle', '--')
-        % Scatter
-        scatter(x, y, 30, c(i,:), 'MarkerFaceColor', c(i,:))
-    end
-    xlabel('Size (inches)')
-    ylabel('Areola p(correct)')
-    set(gca, 'XLim', [28, 50], ...
-             'YLim', [0.25 1], ...
-             'XTick', [30:10:50], ...
+    plot([50, 325], [.25 .25], 'Color', [.6 .6 .6], 'LineStyle','--')
+    xx = [70, 310];
+    c = lines(3);
+    i = 3;
+    nan_idx = isnan(meas_table(:,i));
+    x = meas_table(~nan_idx,i) .* 25.4;
+    % Areola
+    y = ar_pc(~nan_idx);
+    [r,p] = corr(x,y);
+    p1 = polyfit(x, y, 1);
+    plot(xx, polyval(p1, xx), 'Color', areola_color, 'LineStyle', '--')
+    scatter(x, y, 30, areola_color, 'MarkerFaceColor', areola_color)
+    % Niple
+    y = nip_pc(~nan_idx);
+    [r,p] = corr(x,y);
+    p1 = polyfit(x, y, 1);
+    plot(xx, polyval(p1, xx), 'Color', nipple_color, 'LineStyle', '--')
+    scatter(x, y, 30, nipple_color, 'MarkerFaceColor', nipple_color)
+    xlabel(sprintf('%s Bust (mm)', GetUnicodeChar('Delta')))
+    ylabel('p(correct)')
+    set(gca, 'XLim', [50, 325], ...
+             'YLim', [0 1], ...
+             'XTick', [100:100:300], ...
              'YTick', [.25:.25:1])
-    [x,y] = GetAxisPosition(gca, 95, 95);
-    text(x,y, ColorText({'Bust', 'Underbust'}, c), 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right')
 
 AddFigureLabels(gcf, [.05, -.05])
 

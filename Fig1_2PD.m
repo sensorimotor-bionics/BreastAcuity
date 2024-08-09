@@ -66,7 +66,7 @@ axes('Position', [0.4 yp3 .2 .225]); hold on
     nan_idx = isnan(x) | isnan(y);
     x = x(~nan_idx); y = y(~nan_idx);
     p1 = polyfit(x, y, 1);
-    [r,p] = corr(x,y, 'Type', 'Pearson'); p = p * 4;
+    [r,p] = corr(x,y, 'Type', 'Pearson'); p = p * 4; % Bonferonni correction
     xl = [0, 250];
     plot(xl, polyval(p1, xl), 'Color', [.6 .6 .6], 'LineStyle', '--')
     scatter(x, y, 30, lf_colors(3,:), 'MarkerFaceColor', lf_colors(3,:))
@@ -111,16 +111,111 @@ annotation("textbox", [0.65 0.35 .05 .05], 'String', char(char_offset+4), ...
 shg
 print(gcf, fullfile(FigurePath, "Fig1_2PD.png"), '-dpng', '-r300')
 
-%% Stats
+
+%% JND Stats
 [p, tab, st] = anova1(table2array(jnd_table), [], "off");
 % ANOVA effect
 fprintf('1-way ANOVA %s\n', pStr(p))
-fprintf('Location explained variance: %0.2f\n', tab{2,2} / tab{4,2})
 [c,m,~,~] = multcompare(st,'display','off');
+
+% Relative effect size
+temp_jnd = table2array(jnd_table);
+nan_idx = any(isnan(temp_jnd), 2);
+temp_jnd = temp_jnd(~nan_idx, :);
+[p,tab,s] = anova2(temp_jnd, 1, "off");
+fprintf('Location explained variance: %0.2f\n', tab{2,2} / tab{end,2})
+fprintf('Subject explained variance: %0.2f\n', tab{3,2} / tab{end,2})
+
+
+%% Subject rank similarity
+temp_jnd = table2array(jnd_table);
+nan_idx = any(isnan(temp_jnd), 2);
+temp_jnd = temp_jnd(~nan_idx, :);
+jnd_ranks = NaN(size(temp_jnd));
+for i = 1:size(jnd_ranks, 2)
+    jnd_ranks(:,i) = tiedrank(temp_jnd(:,i));
+end
+mean_rank = mean(jnd_ranks, 2, 'omitnan');
+[~, sort_idx] = sort(mean_rank);
+% Sort both
+mean_rank = mean_rank(sort_idx);
+jnd_ranks = jnd_ranks(sort_idx, :);
+[r,p] = corr(mean_rank, jnd_ranks, 'Type', 'Kendall');
+p = p .* size(jnd_ranks, 2);
 
 return
 
 %% Supplementary figure 1
+clf; 
+set(gcf, 'Units', 'Inches', 'Position', [30 1 6.45 3.5])
+
+% JND vs Delta Bust
+x = 5; yi = [1,2,4];
+lims = [40, 250];
+xstart = [.1, .42, .75];
+ypos = .55;
+x_w = .2;
+y_h = .35;
+for i = 1:3
+    axes('Position', [xstart(i), ypos, x_w, y_h]); hold on
+    y = yi(i);
+    % Best fit line and scatter
+    tx = meas_table{:,x} .* 25.4;
+    ty = jnd_table{:,y};
+    nan_idx = isnan(tx) | isnan(ty);
+    tx = tx(~nan_idx,:); ty = ty(~nan_idx,:);
+    p1 = polyfit(tx, ty, 1);
+    plot(lims, polyval(p1, lims), 'Color', [.6 .6 .6], 'LineStyle', '--')
+    scatter(tx, ty, 50, lf_colors(yi(i),:), 'filled')
+    % Formatting
+    if i == 2
+        xlabel(sprintf('%s Bust (mm)', GetUnicodeChar('Delta')))
+    end
+    ylabel(sprintf('%s JND (mm)', t{yi(i)}))
+    % Stats text
+    [r,p] = corr(tx, ty, 'Type', 'Pearson');
+    p = p * 4; % Bonferroni correction
+    [tx,ty] = GetAxisPosition(gca,100,100);
+    text(tx,ty, sprintf('r = %0.3f\n%s', r, pStr(p)), ...
+        'VerticalAlignment', 'top','HorizontalAlignment', 'right')
+end
+
+xs = [.1];
+ypos = .125;
+x_w = .1;
+y_h = .25;
+x_m = 0.085;
+% Region x Region JNDs
+xi = [1,1,2,2,3];
+yi = [2,3,3,4,4];
+for i = 1:5
+    axes('Position', [xs, ypos, x_w, y_h]); hold on
+    x = xi(i);
+    y = yi(i);
+    % Best fit line and scatter
+    tx = meas_table{:,x};
+    ty = jnd_table{:,y};
+    nan_idx = isnan(tx) | isnan(ty);
+    tx = tx(~nan_idx,:); ty = ty(~nan_idx,:);
+    p1 = polyfit(tx, ty, 1);
+    lims = [min(tx), max(tx)];
+    lims = [lims(1) - range(lims)*0.05, lims(2) + range(lims)*0.05];
+    plot(lims, polyval(p1, lims), 'Color', [.6 .6 .6], 'LineStyle', '--')
+    scatter(tx, ty, 50, [.6 .6 .6], 'filled')
+    % Formatting
+    xlabel(sprintf('%s JND (mm)', t{x}))
+    ylabel(sprintf('%s JND (mm)', t{y}))
+    [r,p] = corr(tx, ty, 'Type', 'Pearson');
+    p = p * 6; % Bonferroni correction
+    [tx,ty] = GetAxisPosition(gca,100,100);
+    text(tx,ty, sprintf('r = %0.3f\n%s', r, pStr(p)), ...
+        'VerticalAlignment', 'top','HorizontalAlignment', 'right')
+
+    xs = xs + x_m + x_w;
+end
+AddFigureLabels(gcf, [0.05 -0.03])
+shg
+print(gcf, fullfile(FigurePath, "SuppFig1_2PD.png"), '-dpng', '-r300')
 
 %% Plot single subject psychometric functions
 i = 11; % Which subject index to plot
@@ -209,34 +304,3 @@ for x = 1:width(jnd_table)
     end
 end
 shg
-
-%% Subject ranking
-temp_jnd = table2array(jnd_table);
-nan_idx = any(isnan(temp_jnd), 2);
-temp_jnd = temp_jnd(~nan_idx, :);
-jnd_ranks = NaN(size(temp_jnd));
-for i = 1:size(jnd_ranks, 2)
-    jnd_ranks(:,i) = tiedrank(temp_jnd(:,i));
-end
-mean_rank = mean(jnd_ranks, 2, 'omitnan');
-[~, sort_idx] = sort(mean_rank);
-% Sort both
-mean_rank = mean_rank(sort_idx);
-jnd_ranks = jnd_ranks(sort_idx, :);
-
-clf; hold on
-plot(mean_rank, 'Color', 'k', 'LineWidth', 2)
-for i = 1:size(jnd_ranks, 2)
-    plot(jnd_ranks(:,i), 'Color', lf_colors(i,:))
-    [r,p] = corr(mean_rank, jnd_ranks(:,i), 'Type', 'Kendall');
-    fprintf('%s rank correlation: r = %0.2f, %s\n', jnd_table.Properties.VariableNames{i}, r, pStr(p*4))
-end
-shg
-
-% Relative effect size
-temp_jnd = table2array(jnd_table);
-nan_idx = any(isnan(temp_jnd), 2);
-temp_jnd = temp_jnd(~nan_idx, :);
-[p,tab,s] = anova2(temp_jnd, 1, "off");
-fprintf('Location explained variance: %0.2f\n', tab{2,2} / tab{end,2})
-fprintf('Subject explained variance: %0.2f\n', tab{3,2} / tab{end,2})
