@@ -20,7 +20,7 @@ for i = 1:num_participants
 end
 [~, mean_err_p, ~, mean_err_t] = ttest(mean_loc_error(:,1), mean_loc_error(:,2));
 
-%% Error vs Bias vs Imprecision
+%% Error vs Bias vs Imprecision - OLD ANOVA CODE
 % First discretize and average for each participant
 xe = [0, 5, 25, 40, 60, 90];
 xc  = xe(1:end-1) + diff(xe)./2;
@@ -56,6 +56,67 @@ temp_breast = ebi_breast(:,:,2:3);
 temp_back = ebi_back(:,:,2:3);
 a_breast = anovan(temp_breast(:), {P(:), B(:), L(:)}, 'varnames', {'Participant', 'Distance', 'Type'});
 a_back = anovan(temp_back(:), {P(:), B(:), L(:)}, 'varnames', {'Participant', 'Distance', 'Type'});
+
+%% Error vs Bias vs Impresicion - LMM
+% Create table for linear mixed model
+[dist, err, imp, bias, part, loc] = deal(cell(num_participants,2));
+for p = 1:num_participants
+    % Breast
+    dist{p,1} = td_localization_data(p).breast_grid.dist;
+    err{p,1} = td_localization_data(p).breast_grid.err_mean;
+    imp{p,1} = td_localization_data(p).breast_grid.imp_err;
+    bias{p,1} = td_localization_data(p).breast_grid.bias_err;
+    part{p,1} = ones(size(err{p})) * p;
+    loc{p,1} = ones(size(err{p}));
+    % Back
+    dist{p,2} = td_localization_data(p).back_grid.dist;
+    err{p,2} = td_localization_data(p).back_grid.err_mean;
+    imp{p,2} = td_localization_data(p).back_grid.imp_err;
+    bias{p,2} = td_localization_data(p).back_grid.bias_err;
+    part{p,2} = ones(size(err{p})) * p;
+    loc{p,2} = ones(size(err{p})) * 2;
+end
+% Concatenate
+dist = cat(1, dist{:});
+err = cat(1, err{:});
+imp = cat(1, imp{:});
+bias = cat(1, bias{:});
+part = categorical(cat(1, part{:}));
+loc = categorical(cat(1, loc{:}));
+
+% Breast vs Distance
+idx = loc == categorical(1);
+tbl = table(err(idx), dist(idx), part(idx), 'VariableNames', {'Error', 'Distance', 'Participant'});
+model_terms = 'Error~Distance+(Distance-1|Participant)';
+breast_lme = fitlme(tbl, model_terms);
+
+% Back vs Distance
+idx = loc == categorical(2);
+tbl = table(err(idx), dist(idx), part(idx), 'VariableNames', {'Error', 'Distance', 'Participant'});
+model_terms = 'Error~Distance+(Distance-1|Participant)';
+back_lme = fitlme(tbl, model_terms);
+
+
+% Full model
+tbl = table(err, dist, part, loc, 'VariableNames', {'Error', 'Distance', 'Participant', 'Location'});
+model_terms = ['Error~Distance+Location', ... % Fixed effects = distance and location
+               '+(Distance*Location)', ... % Interaction effect = distance * location
+               '+(Distance-1|Participant)']; % Random effects = per participant slope and intercept
+
+full_lme = fitlme(tbl, model_terms);
+
+% Bias vs Imprecision
+bias_imp = [bias; imp];
+dist2 = [dist; dist];
+part2 = [part; part];
+loc2 = [loc; loc];
+dummy = [repelem(categorical(1), length(bias)); repelem(categorical(2), length(imp))]';
+dummy = dummy(:);
+tbl = table(bias_imp, dist2, part2, loc2, dummy, 'VariableNames', {'Error', 'Distance', 'Participant', 'Location', 'Dummy'});
+model_terms = ['Error~Distance+Location+Dummy', ... % Fixed effects = distance and location
+               '+(Dummy*Location)', ... % Interaction effect = distance * location
+               '+(Distance-1|Participant)']; % Random effects = per participant slope and intercept
+bias_imp_lme = fitlme(tbl, model_terms);
 
 
 %% Theta dist
@@ -378,11 +439,11 @@ annotation("textbox", [0.475 0.285 .05 .05], 'String', char(char_offset+6), ...
 'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
 
 shg
-print(gcf, fullfile(FigurePath, "Fig3_Localization.png"), '-dpng', '-r300')
+% print(gcf, fullfile(FigurePath, "Fig3_Localization.png"), '-dpng', '-r300')
 
 shg
 
-%% Supplement?
+%% Supplement
 clf;
 set(gcf, 'Units', 'Inches', 'Position', [30 1 6.5 4])
 axes('Position', [0.05 0.625 0.3 0.3]); hold on
