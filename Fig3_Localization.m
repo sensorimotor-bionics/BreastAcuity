@@ -87,13 +87,13 @@ loc = categorical(cat(1, loc{:}));
 % Breast vs Distance
 idx = loc == categorical(1);
 tbl = table(err(idx), dist(idx), part(idx), 'VariableNames', {'Error', 'Distance', 'Participant'});
-model_terms = 'Error~Distance+(Distance-1|Participant)';
+model_terms = 'Error~Distance+(Distance-1|Participant)+(1|Participant)';
 breast_lme = fitlme(tbl, model_terms);
 
 % Back vs Distance
 idx = loc == categorical(2);
 tbl = table(err(idx), dist(idx), part(idx), 'VariableNames', {'Error', 'Distance', 'Participant'});
-model_terms = 'Error~Distance+(Distance-1|Participant)';
+model_terms = 'Error~Distance+(Distance-1|Participant) + (1|Participant)';
 back_lme = fitlme(tbl, model_terms);
 
 
@@ -101,7 +101,7 @@ back_lme = fitlme(tbl, model_terms);
 tbl = table(err, dist, part, loc, 'VariableNames', {'Error', 'Distance', 'Participant', 'Location'});
 model_terms = ['Error~Distance+Location', ... % Fixed effects = distance and location
                '+(Distance*Location)', ... % Interaction effect = distance * location
-               '+(Distance-1|Participant)']; % Random effects = per participant slope and intercept
+               '+(Distance-1|Participant) + (1|Participant)']; % Random effects = per participant slope and intercept
 
 full_lme = fitlme(tbl, model_terms);
 
@@ -110,12 +110,12 @@ bias_imp = [bias; imp];
 dist2 = [dist; dist];
 part2 = [part; part];
 loc2 = [loc; loc];
-dummy = [repelem(categorical(1), length(bias)); repelem(categorical(2), length(imp))]';
-dummy = dummy(:);
+dummy = [repelem(1, length(bias)); repelem(2, length(imp))]';
+dummy = categorical(dummy(:));
 tbl = table(bias_imp, dist2, part2, loc2, dummy, 'VariableNames', {'Error', 'Distance', 'Participant', 'Location', 'Dummy'});
 model_terms = ['Error~Distance+Location+Dummy', ... % Fixed effects = distance and location
                '+(Dummy*Location)', ... % Interaction effect = distance * location
-               '+(Distance-1|Participant)']; % Random effects = per participant slope and intercept
+               '+(Distance-1|Participant) + (1|Participant)']; % Random effects = per participant slope and intercept
 bias_imp_lme = fitlme(tbl, model_terms);
 
 
