@@ -46,8 +46,8 @@ end
 
 temp_breast = ebi_breast(:,:,1);
 temp_back = ebi_back(:,:,1);
-a_breast = anovan(temp_breast(:), {P(:), B(:)}, 'varnames', {'Participant', 'Distance'});
-a_back = anovan(temp_back(:), {P(:), B(:)}, 'varnames', {'Participant', 'Distance'});
+a_breast = anovan(temp_breast(:), {P(:), B(:)}, 'varnames', {'Participant', 'Distance'}); %#ok<NASGU>
+a_back = anovan(temp_back(:), {P(:), B(:)}, 'varnames', {'Participant', 'Distance'}); %#ok<NASGU>
 
 % 3-way ANOVA (participant, distance from center, type)
 [P,B,L] = meshgrid([1:num_participants], [1:length(xc)], [1,2]);
@@ -77,33 +77,39 @@ for p = 1:num_participants
     loc{p,2} = ones(size(err{p})) * 2;
 end
 % Concatenate
+% Predictors
 dist = cat(1, dist{:});
+part = categorical(cat(1, part{:}));
+loc = categorical(cat(1, loc{:}));
+% Observations
 err = cat(1, err{:});
 imp = cat(1, imp{:});
 bias = cat(1, bias{:});
-part = categorical(cat(1, part{:}));
-loc = categorical(cat(1, loc{:}));
 
 % Breast vs Distance
 idx = loc == categorical(1);
 tbl = table(err(idx), dist(idx), part(idx), 'VariableNames', {'Error', 'Distance', 'Participant'});
-model_terms = 'Error~Distance+(Distance-1|Participant)+(1|Participant)';
+model_terms = 'Error~Distance + (Distance|Participant)';
 breast_lme = fitlme(tbl, model_terms);
+[~,~,breast_stats] = randomEffects(breast_lme);
 
 % Back vs Distance
 idx = loc == categorical(2);
 tbl = table(err(idx), dist(idx), part(idx), 'VariableNames', {'Error', 'Distance', 'Participant'});
-model_terms = 'Error~Distance+(Distance-1|Participant) + (1|Participant)';
+model_terms = 'Error~Distance+(Distance|Participant)';
 back_lme = fitlme(tbl, model_terms);
+[~,~,back_stats] = randomEffects(back_lme);
 
 
 % Full model
 tbl = table(err, dist, part, loc, 'VariableNames', {'Error', 'Distance', 'Participant', 'Location'});
 model_terms = ['Error~Distance+Location', ... % Fixed effects = distance and location
                '+(Distance*Location)', ... % Interaction effect = distance * location
-               '+(Distance-1|Participant) + (1|Participant)']; % Random effects = per participant slope and intercept
+               '+(Distance|Participant)']; % Random effects = per participant slope and intercept
 
 full_lme = fitlme(tbl, model_terms);
+[~,~,full_stats] = randomEffects(full_lme);
+
 
 % Bias vs Imprecision
 bias_imp = [bias; imp];
@@ -115,8 +121,9 @@ dummy = categorical(dummy(:));
 tbl = table(bias_imp, dist2, part2, loc2, dummy, 'VariableNames', {'Error', 'Distance', 'Participant', 'Location', 'Dummy'});
 model_terms = ['Error~Distance+Location+Dummy', ... % Fixed effects = distance and location
                '+(Dummy*Location)', ... % Interaction effect = distance * location
-               '+(Distance-1|Participant) + (1|Participant)']; % Random effects = per participant slope and intercept
+               '+(Distance|Participant)']; % Random effects = per participant slope and intercept
 bias_imp_lme = fitlme(tbl, model_terms);
+[~,~,bias_imp_stats] = randomEffects(bias_imp_lme);
 
 
 %% Theta dist
