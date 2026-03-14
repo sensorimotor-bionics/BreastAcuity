@@ -67,6 +67,9 @@ fprintf('%d / %d subjects performed better than chance (areola). Z = %0.3f; p = 
 fprintf('%d / %d subjects performed better than chance (nipple). Z = %0.3f; p = %0.3f\n', ...
     sum(nip_pc_h), nSubjects, nip_meta_pc_z, nip_meta_pc_p)
 
+% Paired test between conditions
+[p,h,s] = signrank(ar_pc, nip_pc);
+
 
 %% Make subject data structure & load measurements
 subjectMeta = readtable(fullfile(DataPath(), 'raw_data', 'SubjectMeta.xlsx'));
@@ -98,8 +101,8 @@ nipple_color = [0.26 0.63 0.28];
 areola_color = [0.26 0.28 0.63];
 
 clf;
-set(gcf, 'Units', 'Inches', 'Position', [30 1 6.45 2.25])
-axes('Position', [0.0 0.125 0.3 0.75]); hold on
+set(gcf, 'Units', 'Inches', 'Position', [30 1 4 2.25])
+axes('Position', [0.0 0.125 0.45 0.75]); hold on
     % Plot cross
     plot([-1 1], [-1 1], 'Color', [.6 .6 .6])
     plot([-1 1], [1 -1], 'Color', [.6 .6 .6])
@@ -126,7 +129,7 @@ axes('Position', [0.0 0.125 0.3 0.75]); hold on
              'XColor', 'none', ...
              'YColor', 'none')
 
-axes('Position', [0.375 0.2 0.25 0.7]); hold on
+axes('Position', [0.575 0.2 0.35 0.675]); hold on
     x = [0.5 0.5 1.5 1.5];
     y = [0 1 1 0];
     ww = 0.25;
@@ -168,33 +171,7 @@ axes('Position', [0.375 0.2 0.25 0.7]); hold on
              'XTickLabel', {'Areola', 'Nipple'})
     ylabel('p(correct)')
 
-axes('Position', [0.725 0.2 0.225 0.7]); hold on
-    plot([50, 325], [.25 .25], 'Color', [.6 .6 .6], 'LineStyle','--')
-    xx = [70, 310];
-    c = lines(3);
-    i = 3;
-    nan_idx = isnan(meas_table(:,i));
-    x = meas_table(~nan_idx,i) .* 25.4;
-    % Areola
-    y = ar_pc(~nan_idx);
-    [r,p] = corr(x,y);
-    p1 = polyfit(x, y, 1);
-    plot(xx, polyval(p1, xx), 'Color', areola_color, 'LineStyle', '--')
-    scatter(x, y, 30, areola_color, 'MarkerFaceColor', areola_color)
-    % Niple
-    y = nip_pc(~nan_idx);
-    [r,p] = corr(x,y);
-    p1 = polyfit(x, y, 1);
-    plot(xx, polyval(p1, xx), 'Color', nipple_color, 'LineStyle', '--')
-    scatter(x, y, 30, nipple_color, 'MarkerFaceColor', nipple_color)
-    xlabel(sprintf('%s Bust (mm)', GetUnicodeChar('Delta')))
-    ylabel('p(correct)')
-    set(gca, 'XLim', [50, 325], ...
-             'YLim', [0 1], ...
-             'XTick', [100:100:300], ...
-             'YTick', [.25:.25:1])
-
 AddFigureLabels(gcf, [.05, -.05])
 
 shg
-print(gcf, fullfile(FigurePath, "Fig2_Quadrant.png"), '-dpng', '-r300')
+% print(gcf, fullfile(FigurePath, "Fig2_Quadrant.png"), '-dpng', '-r300')
