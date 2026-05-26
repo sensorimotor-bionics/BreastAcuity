@@ -175,3 +175,4 @@ AddFigureLabels(gcf, [.05, -.05])
 
 shg
 % print(gcf, fullfile(FigurePath, "Fig2_Quadrant.png"), '-dpng', '-r300')
+exportgraphics(gcf(), fullfile(FigurePath, "Fig2_Quadrant.pdf"), "BackgroundColor", 'w', 'Resolution', 600, 'ContentType', 'vector')

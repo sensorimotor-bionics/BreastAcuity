@@ -42,7 +42,7 @@ for j = 1:4
     if j == 1
         ylabel('p(above)')
     end
-    text(0,1.1, t{j}, 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'FontWeight', 'bold')
+    text(0,1.1, t{j}, 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'FontWeight', 'bold','Color','k')
 end
 
 % JND distributions
@@ -73,7 +73,7 @@ axes('Position', [0.4 yp3 .2 .225]); hold on
     ylabel('Lat Breast JND (mm)')
     xlabel(sprintf('%s Bust (mm)', GetUnicodeChar('Delta')))
     set(gca, 'XLim', xl, 'XTick', [0:100:200], 'YLim', [0 20], 'YTick', [0:10:20])
-    text(.05,.95, sprintf('r = %0.3f\n%s', r, pStr(p)), 'sc', 'VerticalAlignment', 'top')
+    text(.05,.95, sprintf('r = %0.3f\n%s', r, pStr(p)), 'sc', 'VerticalAlignment', 'top','Color','k')
 
 % Medial scaling
 axes('Position', [0.7125 yp3 .2 .225]); hold on
@@ -91,23 +91,24 @@ axes('Position', [0.7125 yp3 .2 .225]); hold on
     ylabel('Med Breast JND (mm)')
     xlabel(sprintf('%s Bust (mm)', GetUnicodeChar('Delta')))
     set(gca, 'XLim', xl, 'XTick', [0:100:200], 'YLim', [0 20], 'YTick', [0:10:20])
-    text(.05,.95, sprintf('r = %0.3f\n%s', r, pStr(p)), 'sc', 'VerticalAlignment', 'top')
+    text(.05,.95, sprintf('r = %0.3f\n%s', r, pStr(p)), 'sc', 'VerticalAlignment', 'top','Color','k')
 
 
 % Annotation
 annotation("textbox", [0.45 yp2-0.14, 0.1 0.1], 'String', 'Distance (mm)', ...
-    'VerticalAlignment', 'top', 'HorizontalAlignment', 'center', 'EdgeColor', 'none')
+    'VerticalAlignment', 'top', 'HorizontalAlignment', 'center', 'EdgeColor', 'none','Color','k')
 char_offset = 64;
 annotation("textbox", [0.05 0.925 .05 .05], 'String', char(char_offset+1), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold','Color','k')
 annotation("textbox", [0.05 0.35 .05 .05], 'String', char(char_offset+2), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold','Color','k')
 annotation("textbox", [0.35 0.35 .05 .05], 'String', char(char_offset+3), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold','Color','k')
 annotation("textbox", [0.65 0.35 .05 .05], 'String', char(char_offset+4), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold','Color','k')
 shg
-% print(gcf, fullfile(FigurePath, "Fig1_2PD.png"), '-dpng', '-r300')
+% print(gcf, fullfile(FigurePath, "Fig1_2PD.svg"), '-dsvg', '-r300')
+exportgraphics(gcf(), fullfile(FigurePath, "Fig1_2PD.pdf"), "BackgroundColor", 'w', 'Resolution', 600, 'ContentType', 'image')
 
 
 %% JND Stats
@@ -159,7 +160,9 @@ for i = 1:2
 end
 AddFigureLabels(gcf, [.1, -.025])
 shg
+
 % print(gcf, fullfile(FigurePath, "SuppFig1_2PD.png"), '-dpng', '-r300')
+exportgraphics(gcf(), fullfile(FigurePath, "SuppFig1_2PD.pdf"), "BackgroundColor", 'w', 'Resolution', 600, 'ContentType', 'vector')
 
 %% Plot single subject psychometric functions
 i = 11; % Which subject index to plot

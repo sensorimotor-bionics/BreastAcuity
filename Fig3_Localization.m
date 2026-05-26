@@ -240,24 +240,23 @@ axes('Position', [0.55 0.625 0.375 0.35]); hold on
 
 % Breast error
 axes('Position', [0.1 0.4125 0.35 0.2]); hold on
-    AlphaLine(xc, ebi_breast(:,:,1), err_col, 'LineWidth', 1.5)
-    AlphaLine(xc, ebi_breast(:,:,2), bias_col, 'LineWidth', 1.5)
-    AlphaLine(xc, ebi_breast(:,:,3), imp_col, 'LineWidth', 1.5)
+    AlphaLine(xc, ebi_breast(:,:,1), err_col, 'line_width', 2)
+    AlphaLine(xc, ebi_breast(:,:,2), bias_col, 'line_width', 2)
+    AlphaLine(xc, ebi_breast(:,:,3), imp_col, 'line_width', 2)
     set(gca, 'XLim', [0, 80], ...
              'XTick', [0:20:80], ...
              'YLim', [0 80], ...
              'YTick', [0:20:80])
     xlabel('Distance from Nipple (mm)')
     ylabel('Error (mm)')
-    [x,y] = GetAxisPosition(gca, 95, 95);
-    text(x,y, ColorText({'Error', 'Bias', 'Imprecision'}, [err_col; bias_col; imp_col]), ...
+    text(.95,.95, ColorText({'Error', 'Bias', 'Imprecision'}, [err_col; bias_col; imp_col]), 'sc', ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right')
 
 % Back error
 axes('Position', [0.55 0.4125 0.35 0.2]); hold on
-    AlphaLine(xc, ebi_back(:,:,1), err_col, 'LineWidth', 1.5)
-    AlphaLine(xc, ebi_back(:,:,2), bias_col, 'LineWidth', 1.5)
-    AlphaLine(xc, ebi_back(:,:,3), imp_col, 'LineWidth', 1.5)
+    AlphaLine(xc, ebi_back(:,:,1), err_col, 'line_width', 2)
+    AlphaLine(xc, ebi_back(:,:,2), bias_col, 'line_width', 2)
+    AlphaLine(xc, ebi_back(:,:,3), imp_col, 'line_width', 2)
     set(gca, 'XLim', [0, 80], ...
              'XTick', [0:20:80], ...
              'YLim', [0 80], ...
@@ -433,20 +432,21 @@ annotation("textbox", [0.35 0. 0.3 0.1], 'String', ColorText({'Absolute Angle', 
     'HorizontalAlignment', 'center', 'EdgeColor', 'none')
 char_offset = 64;
 annotation("textbox", [0.025 0.925 .05 .05], 'String', char(char_offset+1), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.475 0.925 .05 .05], 'String', char(char_offset+2), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.025 0.61 .05 .05], 'String', char(char_offset+3), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.475 0.61 .05 .05], 'String', char(char_offset+4), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.025 0.285 .05 .05], 'String', char(char_offset+5), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.475 0.285 .05 .05], 'String', char(char_offset+6), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 
 shg
 % print(gcf, fullfile(FigurePath, "Fig3_Localization.png"), '-dpng', '-r300')
+exportgraphics(gcf(), fullfile(FigurePath, "Fig3_Localization.png"), "BackgroundColor", 'w', 'Resolution', 600, 'ContentType', 'image')
 
 shg
 
@@ -467,8 +467,7 @@ axes('Position', [0.05 0.625 0.3 0.3]); hold on
     xlabel('Breast Error (mm)')
     ylabel('Back Error (mm)')
     % Stats
-    [x,y] = GetAxisPosition(gca, 95, 5);
-    text(x,y, sprintf('%s', pStr(mean_err_p)), 'HorizontalAlignment', 'right', 'VerticalAlignment','bottom')
+    text(.95,.05, sprintf('%s', pStr(mean_err_p)), 'sc', 'HorizontalAlignment', 'right', 'VerticalAlignment','bottom')
 
 % Example 1
 axes('Position', [0.4 0.5 0.3 0.5]); hold on
@@ -541,8 +540,7 @@ axes('Position', [0.1 0.1 0.25 0.35]); hold on
              'YLim', [0 .4])
     ylabel('Proportion')
     xlabel('Angle')
-    [x,y] = GetAxisPosition(gca, 5, 100);
-    text(x,y,ColorText({'Absolute Angle', 'Center Angle'}, [[.2 .2 .2]; center_col]), 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left')
+    text(.05,1,ColorText({'Absolute Angle', 'Center Angle'}, [[.2 .2 .2]; center_col]), 'sc', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left')
 
 % back theta distribution
 axes('Position', [0.4 0.1 0.25 0.35]); hold on
@@ -581,25 +579,25 @@ axes('Position', [0.7 0.1 0.3 0.35]); hold on
              'XTickLabelRotation', 0)
     xlabel('Absolute Vector Strength')
     ylabel('Center Vector Strength')
-    [x,y] = GetAxisPosition(gca, 95, 60);
-    text(x,y,ColorText({'Breast', 'Back'}, [breast_col; back_col]), 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right')
+    text(.95,.6,ColorText({'Breast', 'Back'}, [breast_col; back_col]), 'sc', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right')
     text(vs_null_thresh + 0.05, 0.1, 'Chance', 'Color', [.4 .4 .4])
 
 char_offset = 64;
 annotation("textbox", [0.025 0.93 .05 .05], 'String', char(char_offset+1), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')   
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')   
 annotation("textbox", [0.4 0.93 .05 .05], 'String', char(char_offset+2), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.7 0.93 .05 .05], 'String', char(char_offset+3), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.025 0.46 .05 .05], 'String', char(char_offset+4), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')   
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')   
 annotation("textbox", [0.325 0.46 .05 .05], 'String', char(char_offset+5), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
 annotation("textbox", [0.675 0.46 .05 .05], 'String', char(char_offset+6), ...
-'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold')
+'VerticalAlignment','top', 'HorizontalAlignment','left', 'EdgeColor', 'none', 'FontWeight','bold', 'Color', 'k')
     
-print(gcf, fullfile(FigurePath, "SuppFig2_Localization.png"), '-dpng', '-r300')
+% print(gcf, fullfile(FigurePath, "SuppFig2_Localization.png"), '-dpng', '-r300')
+exportgraphics(gcf(), fullfile(FigurePath, "SuppFig2_Localization.pdf"), "BackgroundColor", 'w', 'Resolution', 600, 'ContentType', 'vector')
 shg
 
 %% Helper functions
